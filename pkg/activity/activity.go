@@ -1,4 +1,4 @@
-package version
+package activity
 
 // Copyright (c) 2018 Bhojpur Consulting Private Limited, India. All rights reserved.
 
@@ -21,37 +21,41 @@ package version
 // THE SOFTWARE.
 
 import (
-	"fmt"
-	"strings"
+	"net/http"
+
+	engine "github.com/bhojpur/routes/pkg/engine"
+	"github.com/bhojpur/routes/pkg/utils"
 )
 
-var (
-	// Version is the semver release name of this build
-	Version string = "developer"
-	// Commit is the commit hash this build was created from
-	Commit string
-	// Date is the time when this build was created
-	Date string
-
-	// GitCommit will be overwritten automatically by the build system
-	BuildTime string
-	// BuildCommit will be overwritten automatically by the build system
-	BuildCommit = "HEAD"
+const (
+	getEndpoint = "/v1/get_activities"
+	logEndpoint = "/v1/activity_feed"
 )
 
-// Print writes the version info to stdout
-func Print() {
-	fmt.Printf("Version:    %s\n", Version)
-	fmt.Printf("Commit:     %s\n", Commit)
-	fmt.Printf("Build Date: %s\n", Date)
+type Service struct {
+	Client *engine.Client
 }
 
-// FullVersion formats the version to be printed
-func FullVersion() string {
-	return fmt.Sprintf("%s (%s, build %s)", Version, BuildTime, BuildCommit)
+type getResponse struct {
+	Results []Activity `json:"results"`
+	Total   int        `json:"total"`
 }
 
-// RC checks if the Bhojpur Routes version is a release candidate or not
-func RC() bool {
-	return strings.Contains(Version, "rc")
+func (s *Service) Get(query *Query) ([]Activity, error) {
+	resp := &getResponse{}
+	return resp.Results, s.Client.Do(http.MethodGet, getEndpoint, query, resp)
+}
+
+func (s *Service) Log(message string, routeID string) error {
+	req := &Activity{
+		Message: message,
+		RouteID: routeID,
+		Type:    UserMessage,
+	}
+	resp := &utils.StatusResponse{}
+	err := s.Client.Do(http.MethodPost, logEndpoint, req, resp)
+	if err == nil && !resp.Status {
+		return utils.ErrOperationFailed
+	}
+	return err
 }

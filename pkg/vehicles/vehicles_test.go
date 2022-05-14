@@ -1,4 +1,4 @@
-package version
+package vehicles
 
 // Copyright (c) 2018 Bhojpur Consulting Private Limited, India. All rights reserved.
 
@@ -21,37 +21,20 @@ package version
 // THE SOFTWARE.
 
 import (
-	"fmt"
-	"strings"
+	"testing"
+
+	engine "github.com/bhojpur/routes/pkg/engine"
 )
 
-var (
-	// Version is the semver release name of this build
-	Version string = "developer"
-	// Commit is the commit hash this build was created from
-	Commit string
-	// Date is the time when this build was created
-	Date string
+var client = engine.NewClient("11111111111111111111111111111111")
+var service = &Service{Client: client}
 
-	// GitCommit will be overwritten automatically by the build system
-	BuildTime string
-	// BuildCommit will be overwritten automatically by the build system
-	BuildCommit = "HEAD"
-)
-
-// Print writes the version info to stdout
-func Print() {
-	fmt.Printf("Version:    %s\n", Version)
-	fmt.Printf("Commit:     %s\n", Commit)
-	fmt.Printf("Build Date: %s\n", Date)
-}
-
-// FullVersion formats the version to be printed
-func FullVersion() string {
-	return fmt.Sprintf("%s (%s, build %s)", Version, BuildTime, BuildCommit)
-}
-
-// RC checks if the Bhojpur Routes version is a release candidate or not
-func RC() bool {
-	return strings.Contains(Version, "rc")
+func TestIntegrationGetVehicles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode.")
+	}
+	_, err := service.GetVehicles()
+	if err != nil {
+		t.Error(err)
+	}
 }

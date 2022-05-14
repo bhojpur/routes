@@ -1,4 +1,4 @@
-package version
+package territories
 
 // Copyright (c) 2018 Bhojpur Consulting Private Limited, India. All rights reserved.
 
@@ -21,37 +21,46 @@ package version
 // THE SOFTWARE.
 
 import (
-	"fmt"
-	"strings"
+	"encoding/json"
+
+	"github.com/bhojpur/routes/pkg/routing"
 )
 
-var (
-	// Version is the semver release name of this build
-	Version string = "developer"
-	// Commit is the commit hash this build was created from
-	Commit string
-	// Date is the time when this build was created
-	Date string
+type AvoidanceZone struct {
+	//AvoidanceZone ID
+	ID       string      `json:"territory_id"`
+	Name     string      `json:"territory_name"`
+	Color    string      `json:"territory_color"`
+	MemberID json.Number `json:"member_id"`
+	//Territory parameters
+	Territory TerritoryShape `json:"territory"`
+}
 
-	// GitCommit will be overwritten automatically by the build system
-	BuildTime string
-	// BuildCommit will be overwritten automatically by the build system
-	BuildCommit = "HEAD"
+type Territory struct {
+	//Territory ID
+	ID       string      `json:"territory_id" http:"territory_id"`
+	Name     string      `json:"territory_name"`
+	Color    string      `json:"territory_color"`
+	MemberID json.Number `json:"member_id"`
+	//Territory parameters
+	Territory TerritoryShape    `json:"territory"`
+	Addresses []routing.Address `json:"addresses"`
+}
+
+type Query struct {
+	ID       string `http:"territory_id"`
+	DeviceID string `http:"device_id"`
+}
+
+type Type string
+
+const (
+	Circle    Type = "circle"
+	Polygonal Type = "poly"
+	Rectangle Type = "rect"
 )
 
-// Print writes the version info to stdout
-func Print() {
-	fmt.Printf("Version:    %s\n", Version)
-	fmt.Printf("Commit:     %s\n", Commit)
-	fmt.Printf("Build Date: %s\n", Date)
-}
-
-// FullVersion formats the version to be printed
-func FullVersion() string {
-	return fmt.Sprintf("%s (%s, build %s)", Version, BuildTime, BuildCommit)
-}
-
-// RC checks if the Bhojpur Routes version is a release candidate or not
-func RC() bool {
-	return strings.Contains(Version, "rc")
+type TerritoryShape struct {
+	Type Type     `json:"type"`
+	Data []string `json:"data"`
 }

@@ -61,7 +61,7 @@ var rootCmdOpts struct {
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "routes",
+	Use:   "routectl",
 	Short: "Bhojpur Routes is an elastic routes engine powered by Kubernetes",
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if verbose {

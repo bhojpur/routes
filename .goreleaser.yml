@@ -1,0 +1,78 @@
+project_name: routes
+before:
+  hooks:
+    - go mod tidy
+dist: release
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}-{{ .Tag }}-source'
+checksum:
+  name_template: '{{ .ProjectName }}-{{ .Tag }}-checksums.txt'
+builds:
+- id: routectl
+  env:
+  - CGO_ENABLED=0
+  main: client.go
+  binary: routectl
+  ldflags:
+  - -s -w
+  - -X "github.com/bhojpur/routes/pkg/version.Version={{.Version}}-{{.ShortCommit}}"
+  - -X "github.com/bhojpur/routes/pkg/version.BuildTime={{ time "2006-01-02 15:04:05 MST" }}"
+  - -X "github.com/bhojpur/routes/pkg/version.BuildCommit={{ .FullCommit }}"
+- id: routesvr
+  env:
+  - CGO_ENABLED=0
+  main: server.go
+  binary: routesvr
+  ldflags:
+  - -s -w
+  - -X "github.com/bhojpur/routes/pkg/version.Version={{.Version}}-{{.ShortCommit}}"
+  - -X "github.com/bhojpur/routes/pkg/version.BuildTime={{ time "2006-01-02 15:04:05 MST" }}"
+  - -X "github.com/bhojpur/routes/pkg/version.BuildCommit={{ .FullCommit }}"
+archives:
+- id: routectl
+  files:
+  - "none*"
+  format: binary # this removes the tar of the archives, leaving the binaries alone
+  name_template: routectl-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+  builds:
+  - routectl
+- id: routesvr
+  files:
+  - "none*"
+  format: binary # this removes the tar of the archives, leaving the binaries alone
+  name_template: routesvr-{{ .Tag }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+  builds:
+  - routesvr
+  replacements:
+    darwin: Darwin
+    linux: Linux
+    386: i386
+    amd64: x86_64
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+release:
+  prerelease: auto
+  header: |
+    Bhojpur Routes is a pre-integrated routing engine driving many web scale applications
+    and services running over the Bhojpur.NET Platform.
+dockers:
+  - goos: linux
+    goarch: amd64
+    goarm: ''
+    dockerfile: Dockerfile
+    image_templates:
+    - "ghcr.io/bhojpur/routes:{{ .Tag }}"
+    extra_files:
+    - README.md
